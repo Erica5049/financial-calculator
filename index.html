@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>理财计算器（简单/复杂双模式）</title>
+<style>
+  :root { --primary:#007a3d; --radius:6px; }
+  body { font-family:system-ui, sans-serif; margin:40px auto; max-width:480px; }
+  h1 { text-align:center; }
+  label { display:block; margin:12px 0; }
+  input, select, button { width:100%; padding:8px; margin-top:4px; border:1px solid #ccc; border-radius:var(--radius); }
+  button { background:var(--primary); color:#fff; cursor:pointer; }
+  section { margin-top:30px; padding:20px; border:1px solid #eee; border-radius:var(--radius); }
+  .advice { color:var(--primary); font-weight:bold; }
+</style>
+</head>
+<body>
+  <h1>理财计算器</h1>
+
+  <!-- 模式切换 -->
+  <select id="mode">
+    <option value="simple">简单版（3 项输入）</option>
+    <option value="complex">复杂版（多维度）</option>
+  </select>
+
+  <form id="calcForm">
+    <div id="inputs"></div>
+    <button type="submit">计算</button>
+  </form>
+
+  <section id="result" hidden>
+    <h2>计算结果</h2>
+    <div id="resultText"></div>
+    <p id="adviceText" class="advice"></p>
+  </section>
+
+  <section id="contact" hidden>
+    <h3>获取完整方案</h3>
+    <input type="email" id="email" placeholder="邮箱" required>
+    <input type="tel" id="phone" placeholder="电话" required>
+    <button id="submitContact">提交</button>
+  </section>
+
+<script>
+/* ========= 工具函数 ========= */
+const $ = id => document.getElementById(id);
+const modeSel = $('mode'), form = $('calcForm'), inputs = $('inputs');
+const result = $('result'), resultText = $('resultText'), adviceText = $('adviceText');
+const contact = $('contact');
+
+/* ========= 渲染输入 ========= */
+function buildSimpleUI() {
+  inputs.innerHTML = `
+    <label>贷款金额 ¥<input type="number" name="amount" value="100000" required></label>
+    <label>年利率 %<input type="number" name="rate" step="0.01" value="5.99" required></label>
+    <label>期限（月）<input type="number" name="term" value="36" required></label>
+  `;
+}
+function buildComplexUI() {
+  inputs.innerHTML = `
+    <label>年收入 ¥<input type="number" name="income" value="300000" required></label>
+    <label>年支出 ¥<input type="number" name="expense" value="120000" required></label>
+    <label>目标金额 ¥<input type="number" name="target" value="1000000" required></label>
+    <label>投资年限（年）<input type="number" name="years" value="10" required></label>
+    <label>预期通胀 %/年<input type="number" name="inflation" step="0.1" value="2.5"></label>
+    <label>风险承受能力
+      <select name="risk">
+        <option value="low">保守</option>
+        <option value="medium" selected>稳健</option>
+        <option value="high">进取</option>
+      </select>
+    </label>
+  `;
+}
+
+/* ========= 计算逻辑 ========= */
+function calcSimple(fd) {
+  const [amount, rate, term] = [+fd.amount, +fd.rate, +fd.term];
+  const monthlyRate = rate / 100 / 12;
+  const monthly = amount * monthlyRate / (1 - Math.pow(1 + monthlyRate, -term));
+  const totalInterest = monthly * term - amount;
+  return {
+    html: `<p>每月还款：<strong>¥${monthly.toFixed(2)}</strong></p>
+           <p>总利息：<strong>¥${totalInterest.toFixed(2)}</strong></p>`,
+    monthly, totalInterest
+  };
+}
+function calcComplex(fd) {
+  const [income, expense, target, years, inflation, risk] =
+    [+fd.income, +fd.expense, +fd.target, +fd.years, +fd.inflation/100, fd.risk];
+  const annualSave = income - expense;
+  const realRate = {low:0.04, medium:0.06, high:0.08}[risk] - inflation;
+  const needPV = target / Math.pow(1 + realRate, years);
+  const gap = needPV - annualSave * ((Math.pow(1 + realRate, years) - 1) / realRate);
+  const needMonthly = gap > 0 ? gap * realRate / (Math.pow(1 + realRate, years) - 1) / 12 : 0;
+  return {
+    html: `<p>每年结余：<strong>¥${annualSave.toLocaleString()}</strong></p>
+           <p>需每月追加投资：<strong>¥${needMonthly.toFixed(0)}</strong></p>
+           <p>年化实际收益率：<strong>${(realRate*100).toFixed(2)}%</strong></p>`,
+    needMonthly
+  };
+}
+
+/* ========= 建议模板 ========= */
+function renderAdvice(data, mode) {
+  if (mode === 'simple') {
+    return data.monthly < 3000
+      ? '月供压力较低，可保持当前方案。'
+      : '月供较高，建议提高首付或延长年限降低压力。';
+  } else {
+    return data.needMonthly <= 0
+      ? '当前结余已足够达成目标，请继续保持！'
+      : `建议每月追加投资 ¥${data.needMonthly.toFixed(0)}，并定期复盘配置比例。`;
+  }
+}
+
+/* ========= 留资 ========= */
+function initContact() {
+  contact.hidden = false;
+  $('submitContact').onclick = () => {
+    const email = $('email').value, phone = $('phone').value;
+    if (!email || !phone) return alert('请填写完整');
+    fetch('https://httpbin.org/post', {
+      method: 'POST',
+      body: JSON.stringify({ email, phone })
+    }).then(() => alert('已提交，完整方案将发送至您的邮箱'));
+  };
+}
+
+/* ========= 路由 & 事件 ========= */
+function switchMode() {
+  const mode = modeSel.value;
+  result.hidden = true;
+  contact.hidden = true;
+  mode === 'simple' ? buildSimpleUI() : buildComplexUI();
+}
+modeSel.addEventListener('change', switchMode);
+switchMode();
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const fd = Object.fromEntries(new FormData(form));
+  const mode = modeSel.value;
+  const data = mode === 'simple' ? calcSimple(fd) : calcComplex(fd);
+  resultText.innerHTML = data.html;
+  adviceText.textContent = renderAdvice(data, mode);
+  result.hidden = false;
+  if (mode === 'complex') initContact();
+});
+</script>
+</body>
+</html>
