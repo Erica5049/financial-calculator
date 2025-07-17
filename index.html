@@ -2,68 +2,134 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>理财计算器（简单/复杂双模式）</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>理财计算器 - Day4 美化版</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Roboto+Mono&display=swap" rel="stylesheet">
 <style>
-  :root { --primary:#007a3d; --radius:6px; }
-  body { font-family:system-ui, sans-serif; margin:40px auto; max-width:480px; }
-  h1 { text-align:center; }
-  label { display:block; margin:12px 0; }
-  input, select, button { width:100%; padding:8px; margin-top:4px; border:1px solid #ccc; border-radius:var(--radius); }
-  button { background:var(--primary); color:#fff; cursor:pointer; }
-  section { margin-top:30px; padding:20px; border:1px solid #eee; border-radius:var(--radius); }
-  .advice { color:var(--primary); font-weight:bold; }
+:root{
+  --primary:#007a3d;
+  --primary-light:#00a050;
+  --bg:#f5f7fa;
+  --card:#ffffff;
+  --text:#1d1d1f;
+  --text-light:#6e6e73;
+  --radius:12px;
+  --shadow:0 4px 16px rgba(0,0,0,.08);
+  --font-main:'Inter',sans-serif;
+  --font-mono:'Roboto Mono',monospace;
+  --breakpoint-sm:576px;
+  --breakpoint-md:768px;
+  --breakpoint-lg:992px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);font-family:var(--font-main);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+.container{max-width:720px;width:100%}
+h1{text-align:center;margin-bottom:2rem;font-weight:600}
+/* 响应式 Tabs */
+.tabs{display:flex;gap:.5rem;margin-bottom:1.5rem}
+.tab{flex:1;text-align:center;padding:.75rem;border-radius:var(--radius);background:#e7e7eb;font-weight:600;cursor:pointer;transition:.3s}
+.tab.active{background:var(--primary);color:#fff}
+/* 卡片 */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.5rem;margin-bottom:1.5rem}
+label{display:block;margin-bottom:.75rem;font-weight:600;color:var(--text)}
+input[type=number],select{width:100%;padding:.75rem;border:1px solid #d1d1d6;border-radius:var(--radius);font-size:1rem;font-family:var(--font-main)}
+input[type=number]:focus,select:focus{outline:none;border-color:var(--primary)}
+button{width:100%;padding:.875rem;border:none;border-radius:var(--radius);background:var(--primary);color:#fff;font-size:1rem;font-weight:600;cursor:pointer;transition:background .3s}
+button:hover{background:var(--primary-light)}
+/* 结果动画 */
+#resultCard{opacity:0;transform:translateY(20px);transition:opacity .4s,transform .4s}
+#resultCard.show{opacity:1;transform:none}
+.report h2{margin-bottom:1rem;color:var(--primary)}
+.report p{line-height:1.6;margin-bottom:.5rem}
+.highlight{background:#eafff1;padding:1rem;border-left:4px solid var(--primary);border-radius:var(--radius);margin:1rem 0}
+.contact-form{margin-top:1.5rem;border-top:1px dashed #ccc;padding-top:1.5rem}
+.contact-form input{margin-bottom:1rem}
+/* 微动画 */
+@keyframes pulse{50%{transform:scale(1.05)}}
+button:active{animation:pulse .2s}
+/* 响应式 Grid */
+@media(min-width:var(--breakpoint-md)){
+  .inputs-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+}
+@media(min-width:var(--breakpoint-lg)){
+  .layout{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+}
 </style>
+<!-- Google Analytics（埋点） -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'GA_MEASUREMENT_ID');
+  // 通用埋点函数
+  function track(event, payload = {}) {
+    gtag('event', event, payload);
+  }
+</script>
 </head>
 <body>
-  <h1>理财计算器</h1>
+<div class="container">
+  <h1>理财计算器 - Day4 美化版</h1>
 
-  <!-- 模式切换 -->
-  <select id="mode">
-    <option value="simple">简单版（3 项输入）</option>
-    <option value="complex">复杂版（多维度）</option>
-  </select>
+  <!-- 响应式 Tabs -->
+  <div class="tabs">
+    <div class="tab active" data-mode="simple">简单版</div>
+    <div class="tab" data-mode="complex">复杂版</div>
+  </div>
 
-  <form id="calcForm">
-    <div id="inputs"></div>
-    <button type="submit">计算</button>
-  </form>
+  <!-- 输入区 -->
+  <div class="card">
+    <form id="calcForm">
+      <div id="inputs" class="inputs-grid"></div>
+      <button type="submit">开始计算</button>
+    </form>
+  </div>
 
-  <section id="result" hidden>
-    <h2>计算结果</h2>
-    <div id="resultText"></div>
-    <p id="adviceText" class="advice"></p>
-  </section>
-
-  <section id="contact" hidden>
-    <h3>获取完整方案</h3>
-    <input type="email" id="email" placeholder="邮箱" required>
-    <input type="tel" id="phone" placeholder="电话" required>
-    <button id="submitContact">提交</button>
-  </section>
+  <!-- 结果区 -->
+  <div id="resultCard" class="card hidden">
+    <div id="report" class="report"></div>
+    <!-- 复杂版留资 -->
+    <div id="contactForm" class="contact-form hidden">
+      <h3>获取专属理财方案</h3>
+      <input type="email" id="email" placeholder="邮箱" required>
+      <input type="tel" id="phone" placeholder="电话" required>
+      <button id="sendBtn" type="button">立即获取</button>
+    </div>
+  </div>
+</div>
 
 <script>
-/* ========= 工具函数 ========= */
+/* ---------- 工具 ---------- */
 const $ = id => document.getElementById(id);
-const modeSel = $('mode'), form = $('calcForm'), inputs = $('inputs');
-const result = $('result'), resultText = $('resultText'), adviceText = $('adviceText');
-const contact = $('contact');
+const tabs = document.querySelectorAll('.tab');
+let mode = 'simple';
 
-/* ========= 渲染输入 ========= */
-function buildSimpleUI() {
-  inputs.innerHTML = `
-    <label>贷款金额 ¥<input type="number" name="amount" value="100000" required></label>
-    <label>年利率 %<input type="number" name="rate" step="0.01" value="5.99" required></label>
-    <label>期限（月）<input type="number" name="term" value="36" required></label>
-  `;
-}
-function buildComplexUI() {
-  inputs.innerHTML = `
-    <label>年收入 ¥<input type="number" name="income" value="300000" required></label>
-    <label>年支出 ¥<input type="number" name="expense" value="120000" required></label>
-    <label>目标金额 ¥<input type="number" name="target" value="1000000" required></label>
-    <label>投资年限（年）<input type="number" name="years" value="10" required></label>
-    <label>预期通胀 %/年<input type="number" name="inflation" step="0.1" value="2.5"></label>
-    <label>风险承受能力
+/* ---------- 渲染输入（响应式 Grid） ---------- */
+function buildUI(m){
+  const i = $('inputs');
+  i.innerHTML = m==='simple'
+  ? `
+    <label>贷款金额 ¥<input name="amount" type="number" value="100000" step="10000" required></label>
+    <label>年利率 %<input name="rate" type="number" step="0.01" value="5.99" required></label>
+    <label>期限（月）<input name="term" type="number" value="36" required></label>
+    <label>还款方式
+      <select name="method">
+        <option value="equalInterest">等额本息</option>
+        <option value="equalPrincipal">等额本金</option>
+        <option value="equalInterestPrincipal">等本等息</option>
+        <option value="interestOnly">先息后本</option>
+      </select>
+    </label>
+  `
+  : `
+    <label>年收入 ¥<input name="income" type="number" value="300000" step="10000" required></label>
+    <label>年支出 ¥<input name="expense" type="number" value="120000" step="10000" required></label>
+    <label>目标金额 ¥<input name="target" type="number" value="1000000" step="10000" required></label>
+    <label>投资年限（年）<input name="years" type="number" value="10" required></label>
+    <label>预期通胀 %<input name="inflation" type="number" step="0.1" value="2.5"></label>
+    <label>风险承受力
       <select name="risk">
         <option value="low">保守</option>
         <option value="medium" selected>稳健</option>
@@ -72,80 +138,131 @@ function buildComplexUI() {
     </label>
   `;
 }
+tabs.forEach(t=>t.onclick=()=>{
+  tabs.forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  mode = t.dataset.mode;
+  buildUI(mode);
+  $('resultCard').classList.remove('show','hidden');
+  $('contactForm').classList.add('hidden');
+});
 
-/* ========= 计算逻辑 ========= */
-function calcSimple(fd) {
-  const [amount, rate, term] = [+fd.amount, +fd.rate, +fd.term];
-  const monthlyRate = rate / 100 / 12;
-  const monthly = amount * monthlyRate / (1 - Math.pow(1 + monthlyRate, -term));
-  const totalInterest = monthly * term - amount;
-  return {
-    html: `<p>每月还款：<strong>¥${monthly.toFixed(2)}</strong></p>
-           <p>总利息：<strong>¥${totalInterest.toFixed(2)}</strong></p>`,
-    monthly, totalInterest
-  };
+/* ---------- 计算 ---------- */
+function calcLoan(amount, annualRate, term, method){
+  const r = annualRate / 100 / 12;
+  let monthly, interest, firstMonth, lastMonth;
+  switch(method){
+    case 'equalInterest':
+      monthly = amount * r * Math.pow(1+r, term) / (Math.pow(1+r, term) - 1);
+      interest = monthly * term - amount;
+      firstMonth = lastMonth = monthly;
+      break;
+    case 'equalPrincipal':
+      const principalPerMonth = amount / term;
+      const firstInterest = amount * r;
+      const lastInterest  = principalPerMonth * r;
+      firstMonth = principalPerMonth + firstInterest;
+      lastMonth  = principalPerMonth + lastInterest;
+      interest   = (amount * r + lastInterest) * term / 2;
+      monthly    = '逐月递减';
+      break;
+    case 'equalInterestPrincipal':
+      interest = amount * annualRate / 100 * (term/12);
+      monthly  = (amount + interest) / term;
+      firstMonth = lastMonth = monthly;
+      break;
+    case 'interestOnly':
+      monthly = amount * r;
+      interest = monthly * term;
+      firstMonth = monthly;
+      lastMonth  = monthly + amount;
+      break;
+  }
+  return {monthly, interest, firstMonth, lastMonth};
 }
-function calcComplex(fd) {
-  const [income, expense, target, years, inflation, risk] =
-    [+fd.income, +fd.expense, +fd.target, +fd.years, +fd.inflation/100, fd.risk];
-  const annualSave = income - expense;
-  const realRate = {low:0.04, medium:0.06, high:0.08}[risk] - inflation;
-  const needPV = target / Math.pow(1 + realRate, years);
-  const gap = needPV - annualSave * ((Math.pow(1 + realRate, years) - 1) / realRate);
-  const needMonthly = gap > 0 ? gap * realRate / (Math.pow(1 + realRate, years) - 1) / 12 : 0;
-  return {
-    html: `<p>每年结余：<strong>¥${annualSave.toLocaleString()}</strong></p>
-           <p>需每月追加投资：<strong>¥${needMonthly.toFixed(0)}</strong></p>
-           <p>年化实际收益率：<strong>${(realRate*100).toFixed(2)}%</strong></p>`,
-    needMonthly
-  };
+function calcComplex(fd){
+  const {income,expense,target,years,inflation,risk}=fd;
+  const annualSave = income-expense;
+  const realRate = ({low:0.04,medium:0.06,high:0.08}[risk]-inflation/100);
+  const pvTarget = target/Math.pow(1+realRate,years);
+  const gap = pvTarget-annualSave*((Math.pow(1+realRate,years)-1)/realRate);
+  const needMonthly = gap>0?gap*realRate/((Math.pow(1+realRate,years)-1))/12:0;
+  return {annualSave,needMonthly,realRate,income,expense,target,years,risk};
 }
 
-/* ========= 建议模板 ========= */
-function renderAdvice(data, mode) {
-  if (mode === 'simple') {
-    return data.monthly < 3000
-      ? '月供压力较低，可保持当前方案。'
-      : '月供较高，建议提高首付或延长年限降低压力。';
-  } else {
-    return data.needMonthly <= 0
-      ? '当前结余已足够达成目标，请继续保持！'
-      : `建议每月追加投资 ¥${data.needMonthly.toFixed(0)}，并定期复盘配置比例。`;
+/* ---------- 风险-配置-行动联动 ---------- */
+const riskMap = {
+  low:{name:'保守型',bond:'70–80',index:'15–25',equity:'0–5',rebalance:'半年',action:'以货基+短债为主，确保本金安全，适度配置红利指数'},
+  medium:{name:'稳健型',bond:'40–60',index:'30–50',equity:'10–20',rebalance:'季度',action:'股债平衡，定投宽基指数，逢回撤加仓'},
+  high:{name:'进取型',bond:'20–40',index:'40–50',equity:'20–40',rebalance:'月度',action:'高波动资产+行业主题基金，严格止盈止损'}
+};
+
+function genReport(data){
+  if(mode==='simple'){
+    const {monthly,interest,firstMonth,lastMonth}=data;
+    const methodText={equalInterest:'等额本息',equalPrincipal:'等额本金',equalInterestPrincipal:'等本等息',interestOnly:'先息后本'}[data.method];
+    let advice='';
+    if(monthly<2500) advice='月供压力小，可维持当前方案，同时准备6个月应急金。';
+    else advice='月供偏高，建议提高首付或延长年限，减轻现金流压力。';
+    return `
+      <h2>📊 简单版贷款报告</h2>
+      <p>还款方式：<strong>${methodText}</strong></p>
+      <p>首月还款：<strong>¥${firstMonth.toFixed(2)}</strong></p>
+      ${data.method==='equalPrincipal'?`<p>末月还款：<strong>¥${lastMonth.toFixed(2)}</strong></p>`:''}
+      <p>每月还款：<strong>${typeof monthly==='string'?monthly:`¥${monthly.toFixed(2)}`}</strong></p>
+      <p>总利息：<strong>¥${interest.toFixed(2)}</strong></p>
+      <div class="highlight">${advice}</div>
+    `;
+  }else{
+    const {annualSave,needMonthly,realRate,income,expense,target,years,risk}=data;
+    const cfg=riskMap[risk];
+    const gap=needMonthly>0?`还需每月追加 <strong>¥${needMonthly.toFixed(0)}</strong>`:'当前结余已足够';
+    return `
+      <h2>📈 复杂版理财规划</h2>
+      <p>现金流：年收入 <strong>¥${income.toLocaleString()}</strong>，年支出 <strong>¥${expense.toLocaleString()}</strong>，年度可结余 <strong>¥${annualSave.toLocaleString()}</strong>。</p>
+      <p>目标：${years} 年后拥有 <strong>¥${target.toLocaleString()}</strong> 购买力。</p>
+      <p>资金缺口：${gap}。</p>
+      <p>年化实际收益需达 <strong>${(realRate*100).toFixed(2)}%</strong>。</p>
+      <div class="highlight">
+        <b>资产配置（${cfg.name}）：</b><br>
+        • 债券/货基：${cfg.bond}%<br>
+        • 指数基金：${cfg.index}%<br>
+        • 股票/REIT：${cfg.equity}%<br>
+        再平衡周期：${cfg.rebalance}
+      </div>
+      <p><b>行动清单：</b><br>
+      ① 立即：${cfg.action}；<br>
+      ② 3 个月内：完成组合建仓并设置自动定投；<br>
+      ③ 每年：依据收入、市场波动重新测算并调整目标。
+      </p>
+    `;
   }
 }
 
-/* ========= 留资 ========= */
-function initContact() {
-  contact.hidden = false;
-  $('submitContact').onclick = () => {
-    const email = $('email').value, phone = $('phone').value;
-    if (!email || !phone) return alert('请填写完整');
-    fetch('https://httpbin.org/post', {
-      method: 'POST',
-      body: JSON.stringify({ email, phone })
-    }).then(() => alert('已提交，完整方案将发送至您的邮箱'));
-  };
-}
-
-/* ========= 路由 & 事件 ========= */
-function switchMode() {
-  const mode = modeSel.value;
-  result.hidden = true;
-  contact.hidden = true;
-  mode === 'simple' ? buildSimpleUI() : buildComplexUI();
-}
-modeSel.addEventListener('change', switchMode);
-switchMode();
-
-form.addEventListener('submit', e => {
+/* ---------- 提交 & 埋点 ---------- */
+$('calcForm').addEventListener('submit',e=>{
   e.preventDefault();
-  const fd = Object.fromEntries(new FormData(form));
-  const mode = modeSel.value;
-  const data = mode === 'simple' ? calcSimple(fd) : calcComplex(fd);
-  resultText.innerHTML = data.html;
-  adviceText.textContent = renderAdvice(data, mode);
-  result.hidden = false;
-  if (mode === 'complex') initContact();
+  track('click_calc',{mode});
+  const fd = Object.fromEntries(new FormData(e.target));
+  Object.keys(fd).forEach(k=>fd[k]=+fd[k]||fd[k]);
+  const data = mode==='simple'?calcLoan(fd.amount,fd.rate,fd.term,fd.method):calcComplex(fd);
+  if(mode==='simple') data.method = fd.method;
+  $('report').innerHTML = genReport(data);
+  $('resultCard').classList.add('show');
+  $('resultCard').classList.remove('hidden');
+  if(mode==='complex') $('contactForm').classList.remove('hidden');
+});
+
+$('sendBtn').addEventListener('click',()=>{
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  if(!email||!phone){alert('请填写完整');return;}
+  track('submit_lead',{mode,email_len:email.length,phone_len:phone.length});
+  fetch('https://httpbin.org/post',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email,phone})
+  }).then(()=>alert('方案将在1小时内发送至邮箱/短信'));
 });
 </script>
 </body>
