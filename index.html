@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>理财计算器</title>
+<title>Financial Calculator</title>
 <style>
 :root{
   --primary:#007a3d;
@@ -29,7 +29,6 @@ input,select{width:100%;padding:.75rem;border:1px solid #d1d1d6;border-radius:va
 button{width:100%;padding:.875rem;border:none;border-radius:var(--radius);background:var(--primary);color:#fff;font-size:1rem;font-weight:600;cursor:pointer;margin-top:1rem}
 .hidden{display:none}
 
-/* 简单版 */
 .report-simple{background:#fff;padding:24px 16px;font-family:var(--font-mono);line-height:2.1;letter-spacing:.02em}
 .report-simple h2{font-size:24px;font-weight:700;margin-bottom:12px;color:var(--primary);margin-top:4px}
 .report-simple .highlight{
@@ -42,7 +41,6 @@ button{width:100%;padding:.875rem;border:none;border-radius:var(--radius);backgr
   line-height:1.8;
 }
 
-/* 进阶版 */
 .report-adv{background:#fff;border-radius:0;padding:24px 20px;font-family:var(--font-main);line-height:2.1;letter-spacing:.01em}
 .report-adv h2{font-size:22px;font-weight:600;margin-bottom:12px;color:var(--primary);margin-top:4px}
 .report-adv .asset-block{
@@ -53,7 +51,7 @@ button{width:100%;padding:.875rem;border:none;border-radius:var(--radius);backgr
   border-radius:var(--radius);
 }
 
-/* 表单：仅放大输入框间距 */
+/* === 仅调整下方输入框间距 === */
 .contact-form{margin-top:2.5rem;border-top:1px dashed #ccc;padding-top:1.5rem}
 .contact-form h3{margin-bottom:20px;color:var(--primary)}
 .contact-form input{
@@ -62,41 +60,36 @@ button{width:100%;padding:.875rem;border:none;border-radius:var(--radius);backgr
   border:1px solid #d1d1d6;
   border-radius:var(--radius);
   font-size:1rem;
-  margin-bottom:1.2rem;   /* 关键：垂直间距加大 */
+  margin-bottom:1.2rem;   /* 与行间距一致 */
 }
-.contact-form input:last-of-type{margin-bottom:.75rem} /* 最后一根线保持原距离 */
+.contact-form input:last-of-type{margin-bottom:.75rem}
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>理财计算器</h1>
+  <h1>Financial Calculator</h1>
 
-  <!-- Tabs -->
   <div class="tabs">
-    <div class="tab active" data-mode="simple">简单版</div>
-    <div class="tab" data-mode="complex">进阶版</div>
+    <div class="tab active" data-mode="simple">Basic</div>
+    <div class="tab" data-mode="complex">Advanced</div>
   </div>
 
-  <!-- 输入区 -->
   <div class="card">
     <form id="calcForm">
       <div id="inputs"></div>
-      <button type="submit">开始计算</button>
+      <button type="submit">Calculate</button>
     </form>
   </div>
 
-  <!-- 结果区 -->
   <div id="resultCard" class="card hidden">
     <div id="report"></div>
 
-    <!-- 进阶版 Netlify 表单 -->
-    <form id="contactForm" class="hidden" netlify name="contact" onsubmit="setTimeout(()=>alert('理财方案咨询已提交，我们会尽快联系您！'),0)">
-      <h3>理财方案咨询</h3>
-      <input type="text"   name="name"  placeholder="姓名" required>
-      <input type="tel"    name="phone" placeholder="电话" required>
-      <input type="email"  name="email" placeholder="邮箱" required>
+    <form id="contactForm" class="hidden" netlify name="contact" onsubmit="setTimeout(()=>alert('Your consultation request has been submitted. We will contact you soon!'),0)">
+      <h3>Financial Plan Consultation</h3>
+      <input type="text"   name="name"  placeholder="Name" required>
+      <input type="tel"    name="phone" placeholder="Phone" required>
+      <input type="email"  name="email" placeholder="Email" required>
 
-      <!-- 隐藏字段：计算参数 -->
       <input type="hidden" name="mode"      id="hiddenMode">
       <input type="hidden" name="income"    id="hiddenIncome">
       <input type="hidden" name="expense"   id="hiddenExpense">
@@ -105,7 +98,7 @@ button{width:100%;padding:.875rem;border:none;border-radius:var(--radius);backgr
       <input type="hidden" name="inflation" id="hiddenInflation">
       <input type="hidden" name="risk"      id="hiddenRisk">
 
-      <button type="submit">提交</button>
+      <button type="submit">Submit</button>
     </form>
   </div>
 </div>
@@ -115,34 +108,33 @@ const $ = id => document.getElementById(id);
 const tabs = document.querySelectorAll('.tab');
 let mode = 'simple';
 
-/* ---------- 渲染输入 ---------- */
 function buildUI(m){
   const i = $('inputs');
   i.innerHTML = m==='simple'
   ? `
-    <label>贷款金额 ¥<input name="amount" type="number" value="100000" step="10000" required></label>
-    <label>年利率 %<input name="rate" type="number" step="0.01" value="5.99" required></label>
-    <label>期限（月）<input name="term" type="number" value="36" required></label>
-    <label>还款方式
+    <label>Loan Amount ¥<input name="amount" type="number" value="100000" step="10000" required></label>
+    <label>Annual Interest Rate %<input name="rate" type="number" step="0.01" value="5.99" required></label>
+    <label>Term (months)<input name="term" type="number" value="36" required></label>
+    <label>Repayment Method
       <select name="method">
-        <option value="equalInterest">等额本息</option>
-        <option value="equalPrincipal">等额本金</option>
-        <option value="equalInterestPrincipal">等本等息</option>
-        <option value="interestOnly">先息后本</option>
+        <option value="equalInterest">Equal Principal & Interest</option>
+        <option value="equalPrincipal">Equal Principal</option>
+        <option value="equalInterestPrincipal">Equal Interest & Principal</option>
+        <option value="interestOnly">Interest Only</option>
       </select>
     </label>
   `
   : `
-    <label>年收入 ¥<input name="income" type="number" value="300000" step="10000" required></label>
-    <label>年支出 ¥<input name="expense" type="number" value="120000" step="10000" required></label>
-    <label>目标金额 ¥<input name="target" type="number" value="1000000" step="10000" required></label>
-    <label>投资年限（年）<input name="years" type="number" value="10" required></label>
-    <label>预期通胀 %<input name="inflation" type="number" step="0.1" value="2.5"></label>
-    <label>风险承受力
+    <label>Annual Income ¥<input name="income" type="number" value="300000" step="10000" required></label>
+    <label>Annual Expense ¥<input name="expense" type="number" value="120000" step="10000" required></label>
+    <label>Target Amount ¥<input name="target" type="number" value="1000000" step="10000" required></label>
+    <label>Investment Horizon (years)<input name="years" type="number" value="10" required></label>
+    <label>Expected Inflation %<input name="inflation" type="number" step="0.1" value="2.5"></label>
+    <label>Risk Tolerance
       <select name="risk">
-        <option value="low">保守</option>
-        <option value="medium" selected>稳健</option>
-        <option value="high">进取</option>
+        <option value="low">Conservative</option>
+        <option value="medium" selected>Balanced</option>
+        <option value="high">Aggressive</option>
       </select>
     </label>
   `;
@@ -158,7 +150,6 @@ tabs.forEach(t=>t.onclick=()=>{
 });
 buildUI(mode);
 
-/* ---------- 计算 ---------- */
 function calcLoan(amount, annualRate, term, method){
   const r = annualRate / 100 / 12;
   let monthly, interest, firstMonth, lastMonth;
@@ -175,7 +166,7 @@ function calcLoan(amount, annualRate, term, method){
       firstMonth = principalPerMonth + firstInterest;
       lastMonth  = principalPerMonth + lastInterest;
       interest   = (amount * r + lastInterest) * term / 2;
-      monthly    = '逐月递减';
+      monthly    = 'Decreasing Monthly';
       break;
     case 'equalInterestPrincipal':
       interest = amount * annualRate / 100 * (term/12);
@@ -201,60 +192,63 @@ function calcComplex(fd){
   return {annualSave,needMonthly,realRate,income,expense,target,years,risk};
 }
 
-/* ---------- 风险-配置-行动联动 ---------- */
 const riskMap = {
-  low:{name:'保守型',bond:'70–80',index:'15–25',equity:'0–5',rebalance:'半年',action:'以货基+短债为主，确保本金安全，适度配置红利指数'},
-  medium:{name:'稳健型',bond:'40–60',index:'30–50',equity:'10–20',rebalance:'季度',action:'股债平衡，定投宽基指数，逢回撤加仓'},
-  high:{name:'进取型',bond:'20–40',index:'40–50',equity:'20–40',rebalance:'月度',action:'高波动资产+行业主题基金，严格止盈止损'}
+  low:{name:'Conservative',bond:'70–80',index:'15–25',equity:'0–5',rebalance:'Semi-Annual',action:'Focus on money-market & short-term bonds, allocate small portion to high-dividend index funds'},
+  medium:{name:'Balanced',bond:'40–60',index:'30–50',equity:'10–20',rebalance:'Quarterly',action:'60/40 stock-bond mix, regular broad-index dollar-cost averaging, buy dips'},
+  high:{name:'Aggressive',bond:'20–40',index:'40–50',equity:'20–40',rebalance:'Monthly',action:'High-beta assets + sector-thematic funds, strict stop-loss & take-profit'}
 };
 
 function genReport(data){
   if(mode==='simple'){
     const {monthly,interest,firstMonth,lastMonth}=data;
-    const methodText={equalInterest:'等额本息',equalPrincipal:'等额本金',equalInterestPrincipal:'等本等息',interestOnly:'先息后本'}[data.method];
+    const methodText={
+      equalInterest:'Equal Principal & Interest',
+      equalPrincipal:'Equal Principal',
+      equalInterestPrincipal:'Equal Interest & Principal',
+      interestOnly:'Interest Only'
+    }[data.method];
     let advice='';
-    if(monthly<2500) advice='月供压力小，可维持当前方案，同时准备6个月应急金。';
-    else advice='月供偏高，建议提高首付或延长年限，减轻现金流压力。';
+    if(monthly<2500) advice='Your monthly payment is light; keep the plan and maintain a 6-month emergency fund.';
+    else advice='Monthly payment is high. Consider increasing down-payment or extending term to ease cash-flow pressure.';
     return `
       <div class="report-simple">
-        <h2>理财报告</h2>
-        <p>还款方式：<strong>${methodText}</strong></p>
-        <p>首月还款：<strong>¥${firstMonth.toFixed(2)}</strong></p>
-        ${data.method==='equalPrincipal'?`<p>末月还款：<strong>¥${lastMonth.toFixed(2)}</strong></p>`:''}
-        <p>每月还款：<strong>${typeof monthly==='string'?monthly:`¥${monthly.toFixed(2)}`}</strong></p>
-        <p>总利息：<strong>¥${interest.toFixed(2)}</strong></p>
+        <h2>Financial Report</h2>
+        <p>Method: <strong>${methodText}</strong></p>
+        <p>First Month: <strong>¥${firstMonth.toFixed(2)}</strong></p>
+        ${data.method==='equalPrincipal'?`<p>Last Month: <strong>¥${lastMonth.toFixed(2)}</strong></p>`:''}
+        <p>Monthly Payment: <strong>${typeof monthly==='string'?monthly:`¥${monthly.toFixed(2)}`}</strong></p>
+        <p>Total Interest: <strong>¥${interest.toFixed(2)}</strong></p>
         <div class="highlight">${advice}</div>
       </div>
     `;
   }else{
     const {annualSave,needMonthly,realRate,income,expense,target,years,risk}=data;
     const cfg=riskMap[risk];
-    const gap=needMonthly>0?`还需每月追加 <strong>¥${needMonthly.toFixed(0)}</strong>`:'当前结余已足够';
+    const gap=needMonthly>0?`You still need to top-up <strong>¥${needMonthly.toFixed(0)}</strong> per month`:'Your current surplus is already sufficient';
     return `
       <div class="report-adv">
-        <h2>理财规划</h2>
-        <p>现金流：年收入 <strong>¥${income.toLocaleString()}</strong>，年支出 <strong>¥${expense.toLocaleString()}</strong>，年度可结余 <strong>¥${annualSave.toLocaleString()}</strong>。</p>
-        <p>目标：${years} 年后拥有 <strong>¥${target.toLocaleString()}</strong> 购买力。</p>
-        <p>资金缺口：${gap}。</p>
-        <p>年化实际收益需达 <strong>${(realRate*100).toFixed(2)}%</strong>。</p>
+        <h2>Financial Plan</h2>
+        <p>Cash-flow: Annual income <strong>¥${income.toLocaleString()}</strong>, annual expense <strong>¥${expense.toLocaleString()}</strong>, yearly surplus <strong>¥${annualSave.toLocaleString()}</strong>.</p>
+        <p>Goal: Achieve <strong>¥${target.toLocaleString()}</strong> purchasing power in ${years} years.</p>
+        <p>Funding gap: ${gap}.</p>
+        <p>Required real annual return: <strong>${(realRate*100).toFixed(2)}%</strong>.</p>
         <div class="asset-block">
-          <b>资产配置（${cfg.name}）：</b><br>
-          • 债券/货基：${cfg.bond}%<br>
-          • 指数基金：${cfg.index}%<br>
-          • 股票/REIT：${cfg.equity}%<br>
-          再平衡周期：${cfg.rebalance}
+          <b>Asset Allocation (${cfg.name}):</b><br>
+          • Bonds / Money-Market: ${cfg.bond}%<br>
+          • Index Funds: ${cfg.index}%<br>
+          • Stocks / REITs: ${cfg.equity}%<br>
+          Rebalance cycle: ${cfg.rebalance}
         </div>
-        <p><b>行动清单：</b><br>
-        ① 立即：${cfg.action}；<br>
-        ② 3 个月内：完成组合建仓并设置自动定投；<br>
-        ③ 每年：依据收入、市场波动重新测算并调整目标。
+        <p><b>Action Plan:</b><br>
+        ① Immediately: ${cfg.action};<br>
+        ② Within 3 months: Build portfolio and set up auto-investment;<br>
+        ③ Annually: Re-run projections and adjust goals based on income & market changes.
         </p>
       </div>
     `;
   }
 }
 
-/* ---------- 提交 ---------- */
 $('calcForm').addEventListener('submit',e=>{
   e.preventDefault();
   const fd = Object.fromEntries(new FormData(e.target));
@@ -264,7 +258,6 @@ $('calcForm').addEventListener('submit',e=>{
   $('report').innerHTML = genReport(data);
   $('resultCard').classList.remove('hidden');
 
-  /* 进阶版把计算参数写进隐藏字段 */
   if(mode==='complex'){
     $('hiddenMode').value   = mode;
     $('hiddenIncome').value = fd.income;
