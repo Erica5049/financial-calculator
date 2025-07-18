@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>理财计算器</title>
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400   ;600&family=Roboto+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Roboto+Mono&display=swap" rel="stylesheet">
 <style>
 :root{
   --primary:#007a3d;
@@ -31,40 +30,14 @@ input,select{width:100%;padding:.75rem;border:1px solid #d1d1d6;border-radius:va
 button{width:100%;padding:.875rem;border:none;border-radius:var(--radius);background:var(--primary);color:#fff;font-size:1rem;font-weight:600;cursor:pointer;margin-top:1rem}
 .hidden{display:none}
 
-/* 简单版报告（图1样式） */
-.report-simple{
-  background:#fff;
-  border-radius:0;
-  padding:24px 16px;
-  box-shadow:none;
-  font-family:'Roboto Mono',monospace;
-  line-height:1.8;
-  letter-spacing:.02em;
-}
-.report-simple h2{
-  font-size:24px;
-  font-weight:700;
-  margin-bottom:12px;
-}
+.report-simple{background:#fff;border-radius:0;padding:24px 16px;box-shadow:none;font-family:'Roboto Mono',monospace;line-height:1.8;letter-spacing:.02em}
+.report-simple h2{font-size:24px;font-weight:700;margin-bottom:12px}
 
-/* 进阶版报告（图2样式） */
-.report-adv{
-  background:#f9f9f9;
-  border-left:6px solid var(--primary);
-  border-radius:0;
-  padding:24px 20px;
-  font-family:'Inter',sans-serif;
-  line-height:1.75;
-  letter-spacing:.01em;
-}
-.report-adv h2{
-  font-size:22px;
-  font-weight:600;
-  margin-bottom:12px;
-}
+.report-adv{background:#f9f9f9;border-left:6px solid var(--primary);border-radius:0;padding:24px 20px;font-family:'Inter',sans-serif;line-height:1.75;letter-spacing:.01em}
+.report-adv h2{font-size:22px;font-weight:600;margin-bottom:12px}
 
 .contact-form{margin-top:1.5rem;border-top:1px dashed #ccc;padding-top:1.5rem}
-.contact-form h3{margin-bottom:20px} /* 与姓名框拉开距离 */
+.contact-form h3{margin-bottom:20px}
 .contact-form input{width:100%;padding:.75rem;border:1px solid #d1d1d6;border-radius:var(--radius);font-size:1rem;margin-bottom:.75rem}
 </style>
 </head>
@@ -72,7 +45,7 @@ button{width:100%;padding:.875rem;border:none;border-radius:var(--radius);backgr
 <div class="container">
   <h1>理财计算器</h1>
 
-  <!-- Tabs：复杂 → 进阶版 -->
+  <!-- Tabs -->
   <div class="tabs">
     <div class="tab active" data-mode="simple">简单版</div>
     <div class="tab" data-mode="complex">进阶版</div>
@@ -86,17 +59,28 @@ button{width:100%;padding:.875rem;border:none;border-radius:var(--radius);backgr
     </form>
   </div>
 
-  <!-- 结果区（初始隐藏） -->
+  <!-- 结果区 -->
   <div id="resultCard" class="card hidden">
     <div id="report"></div>
-    <!-- 进阶版留资表单 -->
-    <div id="contactForm" class="contact-form hidden">
+
+    <!-- 进阶版 Netlify 表单 -->
+    <form id="contactForm" class="hidden" netlify name="contact" onsubmit="setTimeout(()=>alert('理财方案咨询已提交，我们会尽快联系您！'),0)">
       <h3>理财方案咨询</h3>
-      <input type="text" id="name" placeholder="姓名" required>
-      <input type="tel" id="phone" placeholder="电话" required>
-      <input type="email" id="email" placeholder="邮箱" required>
-      <button id="sendBtn" type="button">提交</button>
-    </div>
+      <input type="text"   name="name"  placeholder="姓名" required>
+      <input type="tel"    name="phone" placeholder="电话" required>
+      <input type="email"  name="email" placeholder="邮箱" required>
+
+      <!-- 隐藏字段：把计算参数一起提交 -->
+      <input type="hidden" name="mode"      id="hiddenMode">
+      <input type="hidden" name="income"    id="hiddenIncome">
+      <input type="hidden" name="expense"   id="hiddenExpense">
+      <input type="hidden" name="target"    id="hiddenTarget">
+      <input type="hidden" name="years"     id="hiddenYears">
+      <input type="hidden" name="inflation" id="hiddenInflation">
+      <input type="hidden" name="risk"      id="hiddenRisk">
+
+      <button type="submit">提交</button>
+    </form>
   </div>
 </div>
 
@@ -142,11 +126,11 @@ tabs.forEach(t=>t.onclick=()=>{
   t.classList.add('active');
   mode = t.dataset.mode;
   buildUI(mode);
-  $('report').innerHTML = '';          // 清空旧报告
-  $('resultCard').classList.add('hidden'); // 隐藏结果
+  $('report').innerHTML = '';
+  $('resultCard').classList.add('hidden');
   $('contactForm').classList.add('hidden');
 });
-buildUI(mode); // 默认简单版
+buildUI(mode);
 
 /* ---------- 计算 ---------- */
 function calcLoan(amount, annualRate, term, method){
@@ -244,7 +228,7 @@ function genReport(data){
   }
 }
 
-/* ---------- 提交 & 埋点 ---------- */
+/* ---------- 提交 ---------- */
 $('calcForm').addEventListener('submit',e=>{
   e.preventDefault();
   const fd = Object.fromEntries(new FormData(e.target));
@@ -253,19 +237,18 @@ $('calcForm').addEventListener('submit',e=>{
   if(mode==='simple') data.method = fd.method;
   $('report').innerHTML = genReport(data);
   $('resultCard').classList.remove('hidden');
-  if(mode==='complex') $('contactForm').classList.remove('hidden');
-});
 
-$('sendBtn').addEventListener('click',()=>{
-  const name = document.getElementById('name').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  const email = document.getElementById('email').value.trim();
-  if(!name||!phone||!email){alert('请填写完整');return;}
-  fetch('https://httpbin.org/post   ',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({name,phone,email})
-  }).then(()=>alert('理财方案咨询已提交'));
+  /* 如果是进阶版，把计算参数写进隐藏字段 */
+  if(mode==='complex'){
+    $('hiddenMode').value   = mode;
+    $('hiddenIncome').value = fd.income;
+    $('hiddenExpense').value= fd.expense;
+    $('hiddenTarget').value = fd.target;
+    $('hiddenYears').value  = fd.years;
+    $('hiddenInflation').value= fd.inflation;
+    $('hiddenRisk').value   = fd.risk;
+    $('contactForm').classList.remove('hidden');
+  }
 });
 </script>
 </body>
